@@ -22,11 +22,23 @@ import time
 def charTokenize(
         readOut: list[list[str]],
         msgSize: int = 256,
-        nulTok: int = 0, # when letter's id is too big
-        eosTok: int = 1, # character added at end of sentence
-        lnkTok: int = 2, # character added when a link is present
-        dType = np.uint32 #
+        nulTok: int = 0,
+        eosTok: int = 1,
+        lnkTok: int = 2,
+        dType = np.uint32 
         ) -> npt.NDArray[np.uint8] | npt.NDArray[np.uint16] | npt.NDArray[np.uint32]:# if you go any higher fuck off
+    """
+    Parses variables from an environment file.
+
+    :param readOut: Contents of a CSV discord chat export.
+    :param msgSize: Size of all messages.
+    :param nulTok: Replaces all characters unable to be represented.
+    :param eosTok: Token at the end of each message.
+    :param lnkTok: Token indicating a link was attached.
+    :param dType: Numpy data type of output array.
+    :returns entries: [msgIndex][position]
+    :rtype: npt.NDArray
+    """
     MAX : int = np.iinfo(dType).max
     msg: str
     link: str
