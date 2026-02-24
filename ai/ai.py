@@ -5,10 +5,11 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 import nnLoops as loops
 import numpy as np
-
 learning_rate = 1e-3
-batch_size = 128
-epochs = 5
+batch_size = 12
+epochs = 10
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 training_data = datasets.FashionMNIST(
     root="data",
@@ -16,7 +17,6 @@ training_data = datasets.FashionMNIST(
     download=True,
     transform=ToTensor()
 )
-train_dataloader = DataLoader(training_data, batch_size=batch_size)
 
 test_data = datasets.FashionMNIST(
     root="data",
@@ -24,17 +24,38 @@ test_data = datasets.FashionMNIST(
     download=True,
     transform=ToTensor()
 )
+def preprocess(x, y):
+    return x.to(device), y.to(device)
+
+
+class WrappedDataLoader:
+    def __init__(self, dl, func):
+        self.dl = dl
+        self.func = func
+
+    def __len__(self):
+        return len(self.dl)
+
+    def __iter__(self):
+        for b in self.dl:
+            yield (self.func(*b))
+
+
+
+train_dataloader = DataLoader(training_data, batch_size=batch_size)
 test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
+train_dataloader = WrappedDataLoader(train_dataloader, preprocess)
+test_dataloader = WrappedDataLoader(test_dataloader, preprocess) #yeah this is getting ugly
 
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super().__init__()
         self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28*28, 512), #in, out
+            nn.Linear(28*28, 1024), #in, out
             nn.ELU(),
-            nn.Linear(512, 512),
+            nn.Linear(1024, 512),
             nn.ELU(),
             nn.Linear(512, 10),
         )
@@ -44,11 +65,8 @@ class NeuralNetwork(nn.Module):
         logits = self.linear_relu_stack(x)
         return logits
 
-model = NeuralNetwork()
+model = NeuralNetwork().to(device)
 
-
-
-# Initialize the loss function
 loss_fn = nn.CrossEntropyLoss()
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
