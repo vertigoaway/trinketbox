@@ -6,14 +6,14 @@ import math as m
 
 import torch.nn.functional as F
 class textDataset(Dataset):
-    def __init__(self, inSize:int, outSize:int, tokenizedData,vocSize:int):
+    def __init__(self, inSize:int, outSize:int, tokenizedData, vocSize:int):
         ct : int = int(len(tokenizedData)/(inSize+outSize))-1
         self.ct = ct
         self.vocSize = vocSize
         tokenizedData = torch.LongTensor(tokenizedData)
         inp = []
         out = []
-        torch.tensor
+
         for x in range(ct):
             inp.append(F.one_hot(tokenizedData[inSize*x:inSize*(x+1)],self.vocSize).to_sparse())
             out.append(F.one_hot(tokenizedData[inSize*(x+1):(inSize*(x+1))+outSize],self.vocSize).to_sparse())
