@@ -4,11 +4,11 @@ from torch.utils.data import DataLoader
 
 #holds train and test loop
 
-batch_size : int = 12
+batch_size : int = 1
 
 
 class trainAndTest():
-    def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer):
+    def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer)-> None:
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
         self.loss_fn = loss_fn
@@ -17,7 +17,7 @@ class trainAndTest():
         self.model = model.to(device)
 
 
-    def train_loop(self):
+    def train_loop(self) -> None:
         dataloader = self.train_dataloader
         model = self.model
         loss_fn = self.loss_fn 
@@ -41,11 +41,11 @@ class trainAndTest():
             optimizer.zero_grad()
 
             if batch % 100 == 0:
-                loss, current = loss.item(), batch * batch_size + len(X)
+                loss = loss.item()
                 print(f"loss: {loss:>7f}")
 
 
-    def test_loop(self):
+    def test_loop(self) -> None:
         dataloader = self.test_dataloader
         model = self.model
         loss_fn = self.loss_fn 
