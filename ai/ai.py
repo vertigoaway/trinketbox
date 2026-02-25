@@ -5,25 +5,33 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 import nnLoops as loops
 import numpy as np
+import sparseTokenDataset as sparseDataset
+import charTokenizer as cT
+
+import csv
+from sparseTensorCollate import sparse_collate_fn as sparseCollate 
 learning_rate = 1e-3
-batch_size = 12
+batch_size = 3
 epochs = 10
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+inSize= 256
+outSize = 3
+
+voc = {'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,'h':11,'i':12,'j':13,'k':14,'l':15,'m':16,'n':17,'o':18,'p':19,'q':20,'r':21,'s':22,'t':23,'u':24,'v':25,'w':26,'x':27,'y':28,'z':29,' ':30,'.':31,',':32,'\'':33,'/':34,'\"':35,':':36,';':37,'1':38,'2':39,'3':40,'4':41,'5':42,'6':43,'7':44,'8':45,'9':46,'0':47}
+vocSize = len(voc)
 
 
-training_data = datasets.FashionMNIST(
-    root="data",
-    train=True,
-    download=True,
-    transform=ToTensor()
-)
 
-test_data = datasets.FashionMNIST(
-    root="data",
-    train=False,
-    download=True,
-    transform=ToTensor()
-)
+###load and tokenize
+file = "ai/data/data.csv"
+csvfile = open(file, "r")
+    
+readout = list(csv.reader(csvfile))
+goongagas = []
+for r in readout:
+    goongagas.append(r[3])
+readout = goongagas
+### define some goodies to help with CUDA
 def preprocess(x, y):
     return x.to(device), y.to(device)
 
@@ -39,39 +47,54 @@ class WrappedDataLoader:
     def __iter__(self):
         for b in self.dl:
             yield (self.func(*b))
+###create dataloaders
+x = cT.dynamicTokenize(readout,tokDict=voc)
+print(x)
 
+train_dataSet = sparseDataset.textDataset(inSize=inSize,outSize=outSize,
+                                 tokenizedData=x[0:len(x)//2],
+                                 vocSize=vocSize)
+test_dataSet = sparseDataset.textDataset(inSize=inSize,outSize=outSize,
+                                tokenizedData=x[len(x)//2:],
+                                vocSize=vocSize)
+train_dataloader = DataLoader(train_dataSet, batch_size=batch_size, 
+                              shuffle=True,
+                              collate_fn=sparseCollate)
+test_dataloader = DataLoader(test_dataSet, batch_size=batch_size,
+                              shuffle=True,
+                              collate_fn=sparseCollate)
 
-
-train_dataloader = DataLoader(training_data, batch_size=batch_size)
-test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
 train_dataloader = WrappedDataLoader(train_dataloader, preprocess)
 test_dataloader = WrappedDataLoader(test_dataloader, preprocess) #yeah this is getting ugly
-
+###
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super().__init__()
-        self.flatten = nn.Flatten()
+        #self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28*28, 1024), #in, out
-            nn.ELU(),
-            nn.Linear(1024, 512),
-            nn.ELU(),
-            nn.Linear(512, 10),
+            nn.Linear(256*vocSize,vocSize*256),
+            nn.Linear(vocSize*256,vocSize*128),
+            nn.Linear(vocSize*128, outSize*vocSize),
+            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
-        x = self.flatten(x)
+        #x = self.flatten(x)
         logits = self.linear_relu_stack(x)
         return logits
 
 model = NeuralNetwork().to(device)
-
+print(model)
 loss_fn = nn.CrossEntropyLoss()
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-loopdeloop = loops.trainAndTest(train_dataloader,test_dataloader,model,loss_fn,optimizer)
+loopdeloop = loops.trainAndTest(train_dataloader,
+                                test_dataloader,
+                                model,
+                                loss_fn,
+                                optimizer)
 
 
 for t in range(epochs):
