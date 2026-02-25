@@ -6,7 +6,7 @@ import math as m
 
 #varient of sparsetokendataset, for integer tokens
 
-class textDatasetIDs(Dataset):
+class textDataset(Dataset):
     def __init__(self, inSize:int, outSize:int, tokenizedData, vocSize:int):
         # tokenizedData is expected to be a flat list/array of integer tokens
         ct : int = int(len(tokenizedData)/(inSize+outSize))-1

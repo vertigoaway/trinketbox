@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 batch_size : int = 1
 
-class trainAndTestIDs():
+class trainAndTest():
     def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer)-> None:
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
