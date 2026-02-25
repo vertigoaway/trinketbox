@@ -5,6 +5,7 @@ import integerNNLoops as loops
 import integerTokenDataset as sparseDataset
 import charTokenizer as cT
 import csv
+import numpy as np
 learning_rate : float = 1e-2
 batch_size : int = 8
 epochs : int = 10
@@ -15,7 +16,7 @@ outSize : int = 3
 #1 is end of sent
 #2 is link tok (unused fo now)
 #3 is secret,,,, :3
-voc : dict[str,int]= {'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
+voc : dict[str,int]= {'�':0,'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
        'h':11,'i':12,'j':13,'k':14,'l':15,'m':16,
        'n':17,'o':18,'p':19,'q':20,'r':21,'s':22,
        't':23,'u':24,'v':25,'w':26,'x':27,'y':28,
@@ -23,7 +24,7 @@ voc : dict[str,int]= {'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
        '\"':35,':':36,';':37,'1':38,'2':39,'3':40,
        '4':41,'5':42,'6':43,'7':44,'8':45,'9':46,
        '0':47}
-vocSize : int = len(voc)+4 #acct for special toks
+vocSize : int = len(voc)+3 #acct for special toks
 
 
 
@@ -80,12 +81,37 @@ class NeuralNetwork(nn.Module):
         # Use the last timestep output
         x = lstm_out[:, -1, :]  # (batch_size, hidden_size)
         logits = self.linear(x)  # (batch_size, outSize * vocSize)
-        logits = logits.view(-1, self.vocSize)  # Reshape for loss function
+        logits = logits.view(-1, self.outSize, self.vocSize)  # (batch_size, outSize, vocSize)
         return logits
+
+def logitsToId(rawLogits,timeSteps,batchSize,vocLen):
+    # rawLogits shape: (batchSize, timeSteps, vocLen)
+    tokenIds = torch.argmax(rawLogits,dim=-1)
+    return tokenIds
+
+
+def IdsToChrs(tokenIds,voc):
+    cov = {i: s for s, i in voc.items()}
+    
+    out = []
+    for b in tokenIds:
+        out.append('')
+        for i in b:
+            try:
+                out[-1] += cov[int(i)]
+            except:
+                print('unk char')
+                out[-1] += '?'
+    return out
 
 model = NeuralNetwork(vocSize=vocSize, inSize=inSize, outSize=outSize, 
                       embedding_dim=embedding_dim, hidden_size=hidden_size, 
                       num_layers=num_layers, dropout=dropout).to(device)
+try:
+    print('loading last save')
+    model.load_state_dict(torch.load('model.pth'))
+except:
+    print('loading failed, starting from scratch')
 print(model)
 loss_fn = nn.CrossEntropyLoss()
 
@@ -97,11 +123,24 @@ loopdeloop = loops.trainAndTest(train_dataloader,
                                 loss_fn,
                                 optimizer)
 
+try:
+    for t in range(epochs):
+        print(f"Epoch {t+1}\n-------------------------------")
+        loopdeloop.train_loop()
+        loopdeloop.test_loop()
+except KeyboardInterrupt:
+    print('interrupted')
+    print('saving model')
+    torch.save(model.state_dict(),'model.pth')
+print('fun time')
+print(test_dataSet[1][0])
+a = logitsToId(model(test_dataSet[1][0].unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
+print(IdsToChrs(a,voc))
+print(IdsToChrs(test_dataSet[1][0],voc))
 
-for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    loopdeloop.train_loop()
-    loopdeloop.test_loop()
 
-print(model(test_dataSet[1][0]))
 print("Done!")
+
+
+ 
+

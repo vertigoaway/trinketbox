@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 # nnloops adapted for integer token datasets
 
-batch_size : int = 1
+batch_size : int = 8
 
 class trainAndTest():
     def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer)-> None:
@@ -30,8 +30,11 @@ class trainAndTest():
             X, y = X.to(self.device), y.to(self.device)
 
             pred = model(X)  
+            # Reshape pred from (batch_size, outSize, vocSize) to (batch_size*outSize, vocSize)
+            # Reshape y from (batch_size, outSize) to (batch_size*outSize)
+            pred_flat = pred.view(-1, pred.shape[-1])
             y_flat = y.view(-1)
-            loss = loss_fn(pred, y_flat[:pred.shape[0]])
+            loss = loss_fn(pred_flat, y_flat)
 
             loss.backward()
             optimizer.step()
@@ -58,9 +61,14 @@ class trainAndTest():
             for X, y in dataloader:
                 X, y = X.to(self.device), y.to(self.device)
                 pred = model(X)
+                # Reshape for loss calculation
+                pred_flat = pred.view(-1, pred.shape[-1])
                 y_flat = y.view(-1)
-                test_loss += loss_fn(pred, y_flat[:pred.shape[0]]).item()
-                correct += (pred.argmax(1) == y_flat[:pred.shape[0]]).type(torch.float).sum().item()
+                test_loss += loss_fn(pred_flat, y_flat).item()
+                correct += (pred_flat.argmax(1) == y_flat).type(torch.float).sum().item()
 
         test_loss /= num_batches if num_batches>0 else 1
         print(f"Avg loss: {test_loss:>8f}\n")
+
+
+
