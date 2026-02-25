@@ -1,24 +1,20 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision import datasets
-from torchvision.transforms import ToTensor
 
 
 
-learning_rate : float = 1e-3
-batch_size : int = 64
-epochs : int = 5
+batch_size : int = 12
 
 
 class trainAndTest():
     def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer):
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
-        self.model = model.cuda()
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.device = device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = model.to(device)
 
 
     def train_loop(self):
@@ -31,9 +27,9 @@ class trainAndTest():
         # Unnecessary in this situation but added for best practices
         model.train()
         for batch, (X, y) in enumerate(dataloader):
-            #X is the input
+            #X is the input 
             #y is the intended output
-            X, y = X.to(self.device), y.to(self.device)
+            X, y = X.to(self.device).float(), y.to(self.device).float()
 
             # Compute prediction and loss
             pred = model(X)
@@ -65,10 +61,10 @@ class trainAndTest():
     # also serves to reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
         with torch.no_grad():
             for X, y in dataloader:
-                X, y = X.to(self.device), y.to(self.device)
+                X, y = X.to(self.device).float(), y.to(self.device).float()
                 pred = model(X)
                 test_loss += loss_fn(pred, y).item()
-                correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+                correct += (pred.argmax(1) == y.argmax(1)).type(torch.float).sum().item()
 
         test_loss /= num_batches
         print(f"Avg loss: {test_loss:>8f} \n")
