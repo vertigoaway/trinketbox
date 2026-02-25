@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-import nnLoops as loops
+import sparseNNLoops as loops
 import sparseTokenDataset as sparseDataset
 import charTokenizer as cT
 import csv
@@ -11,7 +11,7 @@ batch_size : int = 1
 epochs : int = 10
 device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 inSize : int = 256
-outSize : int = 3
+outSize : int = 1
 #0 is null
 #1 is end of sent
 #2 is link tok (unused fo now)
@@ -82,7 +82,6 @@ class NeuralNetwork(nn.Module):
             nn.Linear(256*vocSize,vocSize*256),
             nn.Linear(vocSize*256,vocSize*128),
             nn.Linear(vocSize*128, outSize*vocSize),
-            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
