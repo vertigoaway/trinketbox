@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-
+#holds train and test loop
 
 batch_size : int = 12
 
@@ -60,10 +60,10 @@ class trainAndTest():
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode
     # also serves to reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
         with torch.no_grad():
-            for X, y in dataloader:
-                X, y = X.to(self.device).float(), y.to(self.device).float()
+            for X, y in dataloader: #X is in y is expected out
+                X, y = X.to(self.device).float(), y.to(self.device).float() #ensure float type and move to device
                 pred = model(X)
-                test_loss += loss_fn(pred, y).item()
+                test_loss += loss_fn(pred, y).item() #those who loss
                 correct += (pred.argmax(1) == y.argmax(1)).type(torch.float).sum().item()
 
         test_loss /= num_batches
