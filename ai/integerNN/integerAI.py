@@ -5,11 +5,11 @@ import integerNNLoops as loops
 import integerTokenDataset as sparseDataset
 import charTokenizer as cT
 import csv
-learning_rate : float = 1e-3
-batch_size : int = 2
+learning_rate : float = 1e-2
+batch_size : int = 8
 epochs : int = 10
 device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-inSize : int = 768
+inSize : int = 2048
 outSize : int = 3
 #0 is null
 #1 is end of sent
@@ -37,22 +37,7 @@ for r in readout:
     goongagas.append(r[3])
 readout = goongagas
 goongagas = None
-### define some goodies to help with CUDA
-def preprocess(x, y):
-    return x.to(device), y.to(device)
 
-
-class WrappedDataLoader:
-    def __init__(self, dl, func):
-        self.dl = dl
-        self.func = func
-
-    def __len__(self):
-        return len(self.dl)
-
-    def __iter__(self):
-        for b in self.dl:
-            yield (self.func(*b))
 ###create dataloaders
 x = cT.dynamicTokenize(readout,tokDict=voc)
 
@@ -68,11 +53,9 @@ test_dataloader = DataLoader(test_dataSet, batch_size=batch_size,
                               shuffle=True,)
 
 
-#train_dataloader = WrappedDataLoader(train_dataloader, preprocess)
-#test_dataloader = WrappedDataLoader(test_dataloader, preprocess) #yeah this is getting ugly
 ### LSTM Architecture Parameters
 embedding_dim : int = 128  # Embedding dimension for vocabulary
-hidden_size : int = 256    # Hidden size for each LSTM layer
+hidden_size : int = 384    # Hidden size for each LSTM layer
 num_layers : int = 2       # Number of LSTM layers
 dropout : float = 0.2      # Dropout for regularization between LSTM layers
 

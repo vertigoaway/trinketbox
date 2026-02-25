@@ -26,8 +26,6 @@ voc : dict[str,int]= {'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
        '0':47}
 vocSize : int = len(voc)+4 #acct for special toks
 
-
-
 ###load and tokenize
 file : str = "../data/data.csv"
 csvfile = open(file, "r")
@@ -38,22 +36,7 @@ for r in readout:
     goongagas.append(r[3])
 readout = goongagas
 goongagas = None
-### define some goodies to help with CUDA
-def preprocess(x, y):
-    return x.to(device), y.to(device)
 
-
-class WrappedDataLoader:
-    def __init__(self, dl, func):
-        self.dl = dl
-        self.func = func
-
-    def __len__(self):
-        return len(self.dl)
-
-    def __iter__(self):
-        for b in self.dl:
-            yield (self.func(*b))
 ###create dataloaders
 x = cT.dynamicTokenize(readout,tokDict=voc)
 
@@ -71,8 +54,6 @@ test_dataloader = DataLoader(test_dataSet, batch_size=batch_size,
                               collate_fn=sparseCollate)
 
 
-#train_dataloader = WrappedDataLoader(train_dataloader, preprocess)
-#test_dataloader = WrappedDataLoader(test_dataloader, preprocess) #yeah this is getting ugly
 ###
 class NeuralNetwork(nn.Module):
     def __init__(self):
