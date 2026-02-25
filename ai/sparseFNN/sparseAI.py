@@ -29,7 +29,7 @@ vocSize : int = len(voc)+4 #acct for special toks
 
 
 ###load and tokenize
-file : str = "data/data.csv"
+file : str = "../data/data.csv"
 csvfile = open(file, "r")
     
 readout = list(csv.reader(csvfile))
