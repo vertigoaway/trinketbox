@@ -148,10 +148,10 @@ try:
         print(f"Epoch {t+1}\n-------------------------------")
         loopdeloop.train_loop()
         loopdeloop.test_loop()
+        torch.save(model.state_dict(),'model.pth')
 except KeyboardInterrupt:
     print('interrupted')
-    print('saving model')
-    torch.save(model.state_dict(),'model.pth')
+
 print('fun time')
 
 a = logitsToId(model(test_dataSet[1][0].unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
