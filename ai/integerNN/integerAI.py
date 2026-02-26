@@ -6,8 +6,8 @@ import integerTokenDataset as sparseDataset
 import charTokenizer as cT
 import csv
 import numpy as np
-learning_rate : float = 1e-2
-batch_size : int = 5
+learning_rate : float = 1e-3
+batch_size : int = 20
 epochs : int = 10
 device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 inSize : int = 4096
@@ -34,8 +34,11 @@ csvfile = open(file, "r")
     
 readout = list(csv.reader(csvfile))
 goongagas = []
-for r in readout:
-    goongagas.append(r[3])
+for i, r in enumerate(readout):
+    if i == 0:  # Skip header row
+        continue
+    if len(r) > 3 and r[3].strip():  # Skip empty messages
+        goongagas.append(r[3].lower())
 readout = goongagas
 goongagas = None
 
@@ -58,7 +61,7 @@ test_dataloader = DataLoader(test_dataSet, batch_size=batch_size,
 embedding_dim : int = 256  # Embedding dimension for vocabulary
 hidden_size : int = 1024    # Hidden size for each LSTM layer
 num_layers : int = 2       # Number of LSTM layers
-dropout : float = 0.15      # Dropout for regularization between LSTM layers
+dropout : float = 0.2      # Dropout for regularization between LSTM layers
 
 ###
 class NeuralNetwork(nn.Module):
@@ -135,13 +138,16 @@ except KeyboardInterrupt:
 print('fun time')
 
 a = logitsToId(model(test_dataSet[1][0].unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
-
-print(IdsToChrs([test_dataSet[1][0],],voc)[0])
-print(IdsToChrs(a,voc))
+charDict : dict[int,str]= {v: k for k, v in voc.items()}
+ine = test_dataSet[1][0]
+print(IdsToChrs([ine,],voc)[0],end='')
+for i in range(0,2048):
+    a = logitsToId(model(ine.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
+    ine = torch.cat([ine[1:], a.squeeze().to('cpu').view(1)])
+    print(charDict[a.to('cpu').view(-1)[0].item()],end='')
+#print(IdsToChrs([test_dataSet[1][0],],voc)[0])
+#print(IdsToChrs(a,voc))
+#print(IdsToChrs([test_dataSet[1][1],],voc)[0])
 
 
 print("Done!")
-
-
- 
-
