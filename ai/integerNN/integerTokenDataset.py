@@ -9,7 +9,7 @@ import math as m
 class textDataset(Dataset):
     def __init__(self, inSize:int, outSize:int, tokenizedData, vocSize:int)->None:
         # tokenizedData is expected to be a flat list/array of integer tokens
-        self.ct = len(tokenizedData) - outSize+inSize
+        self.ct = len(tokenizedData) - (outSize+inSize+1)
         self.vocSize = vocSize
         self.tokenizedData = torch.LongTensor(tokenizedData) #optimization can be made here
         self.inSize = inSize
