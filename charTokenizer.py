@@ -153,7 +153,7 @@ def dynamicDetokenize(
     ct = 0
     out : list[str] = []
     for tok in line:
-        if tok == nulTok:
+        if tok == eosTok:
             plines.append([])
             ct+=1
         else:
