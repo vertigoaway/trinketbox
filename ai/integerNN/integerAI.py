@@ -29,7 +29,7 @@ vocSize : int = len(voc) #acct for special toks
 
 
 ###load and tokenize
-file : str = "../data/data.csv"
+file : str = "ai/data/data.csv"
 csvfile = open(file, "r")
     
 readout = list(csv.reader(csvfile))
@@ -88,9 +88,15 @@ class NeuralNetwork(nn.Module):
         return logits
 
 def logitsToId(rawLogits,timeSteps,batchSize,vocLen):
-    # rawLogits shape: (batchSize, timeSteps, vocLen)
-    tokenIds = torch.argmax(rawLogits,dim=-1)
-    return tokenIds
+    chosenId = np.zeros(shape=(batchSize,timeSteps))
+    for batch in range(batchSize):
+        for stamp in range(timeSteps):
+            idVals,tokenIds = torch.topk(rawLogits[batch][stamp],k=10,dim=-1)
+            idVals = idVals.cpu().detach().numpy()
+            tokenIds = tokenIds.cpu().detach().numpy()
+            chosenId[batch][stamp] = np.random.choice(tokenIds, size=1, p=idVals/idVals.sum())
+    chosenId = torch.tensor(chosenId, dtype=torch.long)
+    return chosenId
 
 
 def IdsToChrs(tokenIds,voc):
@@ -143,7 +149,7 @@ ine = test_dataSet[1][0]
 print(IdsToChrs([ine,],voc)[0],end='')
 for i in range(0,2048):
     a = logitsToId(model(ine.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
-    ine = torch.cat([ine[1:], a.squeeze().to('cpu').view(1)])
+    ine = torch.cat([ine[1:], a.squeeze().view(1)])
     print(charDict[a.to('cpu').view(-1)[0].item()],end='')
 #print(IdsToChrs([test_dataSet[1][0],],voc)[0])
 #print(IdsToChrs(a,voc))
