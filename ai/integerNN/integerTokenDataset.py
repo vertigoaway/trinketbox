@@ -9,7 +9,7 @@ import math as m
 class textDataset(Dataset):
     def __init__(self, inSize:int, outSize:int, tokenizedData, vocSize:int):
         # tokenizedData is expected to be a flat list/array of integer tokens
-        ct : int = int(len(tokenizedData)/(inSize+outSize))-1
+        ct = (len(tokenizedData) - outSize) // inSize
         self.ct = ct
         self.vocSize = vocSize
         self.tokenizedData = torch.LongTensor(tokenizedData)
@@ -24,4 +24,5 @@ class textDataset(Dataset):
         start = self.inSize * idx
         inp = self.tokenizedData[start:start+self.inSize]
         out = self.tokenizedData[start+self.inSize:start+self.inSize+self.outSize]
+
         return inp, out
