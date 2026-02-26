@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 import integerNNLoops as loops
-import integerTokenDataset as sparseDataset
+import integerTokenDataset as integerDataset
 import charTokenizer as cT
 import csv
 import numpy as np
@@ -52,10 +52,10 @@ goongagas = None
 ### begin loading and tokenizing data
 x = cT.dynamicTokenize(readout,tokDict=voc)
 
-train_dataSet = sparseDataset.textDataset(inSize=inSize,outSize=outSize,
+train_dataSet = integerDataset.textDataset(inSize=inSize,outSize=outSize,
                                  tokenizedData=x[0:len(x)//10*8],
                                  vocSize=vocSize)
-test_dataSet = sparseDataset.textDataset(inSize=inSize,outSize=outSize,
+test_dataSet = integerDataset.textDataset(inSize=inSize,outSize=outSize,
                                 tokenizedData=x[len(x)//10*8:],
                                 vocSize=vocSize)
 train_dataloader = DataLoader(train_dataSet, batch_size=batch_size, 
