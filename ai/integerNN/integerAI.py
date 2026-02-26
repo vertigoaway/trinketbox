@@ -6,12 +6,9 @@ import integerTokenDataset as sparseDataset
 import charTokenizer as cT
 import csv
 import numpy as np
-learning_rate : float = 1e-3
-batch_size : int = 20
-epochs : int = 10
+
 device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-inSize : int = 4096
-outSize : int = 1
+
 #0 is null
 #1 is end of sent
 #2 is link tok (unused fo now)
@@ -26,9 +23,20 @@ voc : dict[str,int]= {'�':0,chr(10):1,'-':2,'_':3,'a':4,'b':5,'c':6,'d':7,'e':
        '0':47}
 vocSize : int = len(voc) #acct for special toks
 
+### LSTM Architecture Parameters
+inSize : int = 4096
+outSize : int = 1
+embedding_dim : int = 256  # Embedding dimension for vocabulary
+hidden_size : int = 1024    # Hidden size for each LSTM layer
+num_layers : int = 2       # Number of LSTM layers
+dropout : float = 0.2      # Dropout for regularization between LSTM layers
+### Training params
+loss_fn = nn.CrossEntropyLoss()
+learning_rate : float = 1e-3
+batch_size : int = 20
+epochs : int = 10
 
-
-###load and tokenize
+###load and pull content
 file : str = "ai/data/data.csv"
 csvfile = open(file, "r")
     
@@ -42,7 +50,7 @@ for i, r in enumerate(readout):
 readout = goongagas
 goongagas = None
 
-###create dataloaders
+### begin loading and tokenizing data
 x = cT.dynamicTokenize(readout,tokDict=voc)
 
 train_dataSet = sparseDataset.textDataset(inSize=inSize,outSize=outSize,
@@ -57,11 +65,7 @@ test_dataloader = DataLoader(test_dataSet, batch_size=batch_size,
                               shuffle=True,)
 
 
-### LSTM Architecture Parameters
-embedding_dim : int = 256  # Embedding dimension for vocabulary
-hidden_size : int = 1024    # Hidden size for each LSTM layer
-num_layers : int = 2       # Number of LSTM layers
-dropout : float = 0.2      # Dropout for regularization between LSTM layers
+
 
 ###
 class NeuralNetwork(nn.Module):
@@ -87,7 +91,8 @@ class NeuralNetwork(nn.Module):
         logits = logits.view(-1, self.outSize, self.vocSize)  # (batch_size, outSize, vocSize)
         return logits
 
-def logitsToId(rawLogits,timeSteps,batchSize,vocLen):
+def logitsToId(rawLogits,timeSteps,batchSize,vocLen): 
+
     chosenId = np.zeros(shape=(batchSize,timeSteps))
     for batch in range(batchSize):
         for stamp in range(timeSteps):
@@ -106,9 +111,9 @@ def IdsToChrs(tokenIds,voc):
     cov = {i: s for s, i in voc.items()}
     
     out = []
-    for b in tokenIds:
+    for b in tokenIds: # batch
         out.append('')
-        for i in b:
+        for i in b: # time step
             try:
                 out[-1] += cov[int(i)]
             except:
@@ -125,7 +130,8 @@ try:
 except:
     print('loading failed, starting from scratch')
 print(model)
-loss_fn = nn.CrossEntropyLoss()
+
+
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
