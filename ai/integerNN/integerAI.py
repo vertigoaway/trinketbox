@@ -91,10 +91,13 @@ def logitsToId(rawLogits,timeSteps,batchSize,vocLen):
     chosenId = np.zeros(shape=(batchSize,timeSteps))
     for batch in range(batchSize):
         for stamp in range(timeSteps):
-            idVals,tokenIds = torch.topk(rawLogits[batch][stamp],k=10,dim=-1)
+            idVals,tokenIds = torch.topk(rawLogits[batch][stamp],k=3,dim=-1)
             idVals = idVals.cpu().detach().numpy()
             tokenIds = tokenIds.cpu().detach().numpy()
-            chosenId[batch][stamp] = np.random.choice(tokenIds, size=1, p=idVals/idVals.sum())
+            try:
+                chosenId[batch][stamp] = np.random.choice(tokenIds, size=1, p=idVals/idVals.sum())
+            except: # can fail if negative prob is given
+                chosenId[batch][stamp] = tokenIds[0] # take most likely one
     chosenId = torch.tensor(chosenId, dtype=torch.long)
     return chosenId
 
