@@ -132,7 +132,7 @@ print(model)
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-model.compile(optimizer=optimizer, loss=loss_fn, metrics=['accuracy'])
+model.compile()
 
 loopdeloop = loops.trainAndTest(train_dataloader,
                                 test_dataloader,
