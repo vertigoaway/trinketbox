@@ -7,16 +7,16 @@ import charTokenizer as cT
 import csv
 import numpy as np
 learning_rate : float = 1e-2
-batch_size : int = 8
+batch_size : int = 5
 epochs : int = 10
 device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-inSize : int = 2048
-outSize : int = 3
+inSize : int = 4096
+outSize : int = 1
 #0 is null
 #1 is end of sent
 #2 is link tok (unused fo now)
 #3 is secret,,,, :3
-voc : dict[str,int]= {'�':0,'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
+voc : dict[str,int]= {'�':0,chr(10):1,'-':2,'_':3,'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
        'h':11,'i':12,'j':13,'k':14,'l':15,'m':16,
        'n':17,'o':18,'p':19,'q':20,'r':21,'s':22,
        't':23,'u':24,'v':25,'w':26,'x':27,'y':28,
@@ -24,7 +24,7 @@ voc : dict[str,int]= {'�':0,'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
        '\"':35,':':36,';':37,'1':38,'2':39,'3':40,
        '4':41,'5':42,'6':43,'7':44,'8':45,'9':46,
        '0':47}
-vocSize : int = len(voc)+3 #acct for special toks
+vocSize : int = len(voc) #acct for special toks
 
 
 
@@ -43,10 +43,10 @@ goongagas = None
 x = cT.dynamicTokenize(readout,tokDict=voc)
 
 train_dataSet = sparseDataset.textDataset(inSize=inSize,outSize=outSize,
-                                 tokenizedData=x[0:len(x)//2],
+                                 tokenizedData=x[0:len(x)//10*8],
                                  vocSize=vocSize)
 test_dataSet = sparseDataset.textDataset(inSize=inSize,outSize=outSize,
-                                tokenizedData=x[len(x)//2:],
+                                tokenizedData=x[len(x)//10*8:],
                                 vocSize=vocSize)
 train_dataloader = DataLoader(train_dataSet, batch_size=batch_size, 
                               shuffle=True,)
@@ -55,10 +55,10 @@ test_dataloader = DataLoader(test_dataSet, batch_size=batch_size,
 
 
 ### LSTM Architecture Parameters
-embedding_dim : int = 128  # Embedding dimension for vocabulary
-hidden_size : int = 384    # Hidden size for each LSTM layer
+embedding_dim : int = 256  # Embedding dimension for vocabulary
+hidden_size : int = 1024    # Hidden size for each LSTM layer
 num_layers : int = 2       # Number of LSTM layers
-dropout : float = 0.2      # Dropout for regularization between LSTM layers
+dropout : float = 0.15      # Dropout for regularization between LSTM layers
 
 ###
 class NeuralNetwork(nn.Module):
@@ -101,7 +101,7 @@ def IdsToChrs(tokenIds,voc):
                 out[-1] += cov[int(i)]
             except:
                 print('unk char')
-                out[-1] += '?'
+                out[-1] += '�'
     return out
 
 model = NeuralNetwork(vocSize=vocSize, inSize=inSize, outSize=outSize, 
@@ -133,10 +133,11 @@ except KeyboardInterrupt:
     print('saving model')
     torch.save(model.state_dict(),'model.pth')
 print('fun time')
-print(test_dataSet[1][0])
+
 a = logitsToId(model(test_dataSet[1][0].unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
+
+print(IdsToChrs([test_dataSet[1][0],],voc)[0])
 print(IdsToChrs(a,voc))
-print(IdsToChrs(test_dataSet[1][0],voc))
 
 
 print("Done!")
