@@ -20,7 +20,8 @@ voc : dict[str,int]= {'�':0,chr(10):1,'-':2,'_':3,'a':4,'b':5,'c':6,'d':7,'e':
        'z':29,' ':30,'.':31,',':32,'\'':33,'/':34,
        '\"':35,':':36,';':37,'1':38,'2':39,'3':40,
        '4':41,'5':42,'6':43,'7':44,'8':45,'9':46,
-       '0':47}
+       '0':47,}
+#'😭':48,'😡':49,'😃':50}
 vocSize : int = len(voc) #acct for special toks
 
 ### LSTM Architecture Parameters
@@ -77,6 +78,7 @@ class NeuralNetwork(nn.Module):
                            num_layers=num_layers, 
                            batch_first=True,
                            dropout=dropout if num_layers > 1 else 0)
+        self.relu = nn.ReLU()
         self.linear = nn.Linear(hidden_size, outSize * vocSize)
         self.outSize = outSize
         self.vocSize = vocSize
@@ -88,11 +90,11 @@ class NeuralNetwork(nn.Module):
         # Use the last timestep output
         x = lstm_out[:, -1, :]  # (batch_size, hidden_size)
         logits = self.linear(x)  # (batch_size, outSize * vocSize)
+        logits = self.relu(logits)  # Apply ReLU activationw
         logits = logits.view(-1, self.outSize, self.vocSize)  # (batch_size, outSize, vocSize)
         return logits
 
 def logitsToId(rawLogits,timeSteps,batchSize,vocLen): 
-
     chosenId = np.zeros(shape=(batchSize,timeSteps))
     for batch in range(batchSize):
         for stamp in range(timeSteps):
@@ -156,10 +158,13 @@ a = logitsToId(model(test_dataSet[1][0].unsqueeze(0).to(device)),timeSteps=outSi
 charDict : dict[int,str]= {v: k for k, v in voc.items()}
 ine = test_dataSet[1][0]
 print(IdsToChrs([ine,],voc)[0],end='')
-for i in range(0,2048):
-    a = logitsToId(model(ine.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
-    ine = torch.cat([ine[1:], a.squeeze().view(1)])
-    print(charDict[a.to('cpu').view(-1)[0].item()],end='')
+try:
+    for i in range(0,4096):
+        a = logitsToId(model(ine.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
+        ine = torch.cat([ine[1:], a.squeeze().view(1)])
+        print(charDict[a.to('cpu').view(-1)[0].item()],end='')
+except KeyboardInterrupt:
+    print('interrupted')
 #print(IdsToChrs([test_dataSet[1][0],],voc)[0])
 #print(IdsToChrs(a,voc))
 #print(IdsToChrs([test_dataSet[1][1],],voc)[0])

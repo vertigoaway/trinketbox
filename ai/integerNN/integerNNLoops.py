@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 # nnloops adapted for integer token datasets
 
-batch_size : int = 8
+batch_size : int = 20
 
 class trainAndTest():
     def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer)-> None:
