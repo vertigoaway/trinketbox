@@ -120,7 +120,7 @@ def dynamicTokenize(
     x:list[npt.NDArray[np.uint8] | npt.NDArray[np.uint16] | npt.NDArray[np.uint32]]=[]
     line:str
     for line in lines:
-        x.extend(__tokenizeLine(line,nulTok,eosTok,lnkTok,dType))
+        x.extend(__tokenizeLine(line,nulTok,eosTok,lnkTok,dType,tokDict))
     y : npt.NDArray[np.uint8] | npt.NDArray[np.uint16] | npt.NDArray[np.uint32] = np.array(x) #ohhhmy god bruh shutUP!!
     return y
 
