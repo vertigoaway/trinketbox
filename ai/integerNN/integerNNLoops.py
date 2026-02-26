@@ -36,9 +36,9 @@ class trainAndTest():
             y_flat = y.view(-1)
             loss = loss_fn(pred_flat, y_flat)
 
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            optimizer.zero_grad()
 
             if batch % 100 == 0:
                 print(f"loss: {loss.item():>7f}")
