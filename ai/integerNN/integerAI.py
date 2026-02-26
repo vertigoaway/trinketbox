@@ -11,8 +11,6 @@ device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "c
 
 #0 is null
 #1 is end of sent
-#2 is link tok (unused fo now)
-#3 is secret,,,, :3
 voc : dict[str,int]= {'�':0,chr(10):1,'-':2,'_':3,'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
        'h':11,'i':12,'j':13,'k':14,'l':15,'m':16,
        'n':17,'o':18,'p':19,'q':20,'r':21,'s':22,
@@ -109,17 +107,16 @@ def logitsToId(rawLogits,timeSteps,batchSize,vocLen):
     return chosenId
 
 
-def IdsToChrs(tokenIds,voc):
+def IdsToChrs(tokenIds,voc:dict[str,int]):
     cov = {i: s for s, i in voc.items()}
     
-    out = []
+    out : list[str] = []
     for b in tokenIds: # batch
         out.append('')
         for i in b: # time step
             try:
                 out[-1] += cov[int(i)]
             except:
-                print('unk char')
                 out[-1] += '�'
     return out
 
@@ -134,8 +131,8 @@ except:
 print(model)
 
 
-
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+model.compile(optimizer=optimizer, loss=loss_fn, metrics=['accuracy'])
 
 loopdeloop = loops.trainAndTest(train_dataloader,
                                 test_dataloader,
