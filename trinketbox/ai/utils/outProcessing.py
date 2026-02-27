@@ -50,14 +50,16 @@ def inferenceResponse(model,inp: str,
                       voc:dict[str,int],
                       eosTok:int=1,outSize:int=1,device:str='cpu'
                       ) -> str:
-    """Generates a response from the model given an input string.
+    """Generates a response from the given context.
     Args:
         model: The model to use.
         inp: context to generate a response for.
         voc: Dict mapping chars to indices
-        eosTok: Token that indicates end of response"""
+        eosTok: Token that indicates end of response
+    Returns:
+        String containing detokenized response"""
     cov = {i: s for s, i in voc.items()}
-    vocSize = len(voc)
+
     context : torch.types._TensorOrTensors = torch.LongTensor(cT.tokenizeLine(inp,tokDict=voc))
     a = 0
     out = ''
@@ -67,3 +69,21 @@ def inferenceResponse(model,inp: str,
         a = a.to('cpu').view(-1)[0].item()
         out += cov[a] # pyright: ignore[reportArgumentType]
     return out
+
+
+def basicInterface(model, voc, memory:str='', timeSteps:int=512,filler:str='�') -> None:
+    if len(memory)<timeSteps:
+        memory+=filler*(len(memory)-timeSteps)
+    print(memory)
+    cont = True
+    while cont:
+        tmp = input('>>').strip()
+        if tmp == 'EXIT':
+            cont = False
+            continue
+        tmp = tmp.lower()
+        memory = memory[len(tmp):] + tmp
+        response = inferenceResponse(model,memory,voc)
+        memory = memory[len(response):] + response
+        print(response)
+    return None
