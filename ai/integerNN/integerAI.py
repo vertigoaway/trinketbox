@@ -62,9 +62,11 @@ test_dataSet = integerDataset.textDataset(inSize=inSize,outSize=outSize,
                                 tokenizedData=x[len(x)//2:],
                                 vocSize=vocSize)
 train_dataloader = DataLoader(train_dataSet, batch_size=batch_size, 
-                              shuffle=True,)
+                              shuffle=True,
+                              num_workers=4)
 test_dataloader = DataLoader(test_dataSet, batch_size=batch_size,
-                              shuffle=True,)
+                              shuffle=True,
+                              num_workers=4)
 
 
 
@@ -134,7 +136,7 @@ def inferenceResponse(model,inp: str,
         context = torch.cat([context[outSize:], a.squeeze().view(1)])
         a = a.to('cpu').view(-1)[0].item()
         print(cov[a],end='',flush=True) # pyright: ignore[reportArgumentType]
-    out = cT.__detokenizeLine(context.cpu().numpy()[0])
+    out = cT.__detokenizeLine(context.cpu().numpy(),tokDict=voc)
     return out
 
 
