@@ -1,9 +1,11 @@
 from setuptools import setup, find_packages
 setup(
     name="trinketbox",
-    version="0.1.2",
+    version="0.1.3",
     author="verti",
     author_email="verti@piss.industries",
+    description='verti\'s assortment of libraries',
+    url='https://github.com/vertigoaway/trinketbox',
     license="MIT",
     license_files=['LICENSE.txt'],
     packages=find_packages(),
