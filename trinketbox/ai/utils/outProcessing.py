@@ -21,7 +21,7 @@ def logitsToId(rawLogits:torch.LongTensor | torch.Tensor,
             tokenIds = tokenIds.cpu().detach().numpy()
             try:
                 chosenId[batch][stamp] = np.random.choice(tokenIds, size=1, p=idVals/idVals.sum())
-            except: # can fail if negative prob is given
+            except ValueError: # can fail if negative prob is given
                 chosenId[batch][stamp] = tokenIds[0] # take most likely one
     chosenId = torch.tensor(chosenId, dtype=torch.long)
     #chosenId shape: (batchSize, timeSteps)
@@ -42,7 +42,7 @@ def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:dict
         for i in b: # time step
             try:
                 out[-1] += cov[int(i)]
-            except:
+            except IndexError:
                 out[-1] += '�'
     return out
 
@@ -58,7 +58,7 @@ def inferenceResponse(model,inp: str,
         eosTok: Token that indicates end of response"""
     cov = {i: s for s, i in voc.items()}
     vocSize = len(voc)
-    context : torch.types._TensorOrTensors = torch.LongTensor(cT.__tokenizeLine(inp,tokDict=voc))
+    context : torch.types._TensorOrTensors = torch.LongTensor(cT.tokenizeLine(inp,tokDict=voc))
     a = 0
     out = ''
     while a!=eosTok:

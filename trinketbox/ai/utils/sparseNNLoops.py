@@ -4,8 +4,6 @@ from torch.utils.data import DataLoader
 
 #holds train and test loop
 
-batch_size : int = 1
-
 
 class trainAndTest():
     def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer)-> None:
