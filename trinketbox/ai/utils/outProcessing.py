@@ -42,7 +42,7 @@ def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:dict
         for i in b: # time step
             try:
                 out[-1] += cov[int(i)]
-            except IndexError:
+            except KeyError:
                 out[-1] += '�'
     return out
 

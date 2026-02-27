@@ -79,7 +79,7 @@ def detokenizeLine( #detokenizes a single line of any size
     for t in msg:
         try:
             out+=charDict[t]
-        except IndexError:
+        except KeyError:
             out+=charDict[nulTok]
     return out
 
