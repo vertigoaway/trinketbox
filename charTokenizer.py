@@ -85,7 +85,7 @@ def __tokenizeLine( #tokenizes a single line of any size, makes life easier
         dType = np.uint32,
         tokDict : dict[str,int] = {'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,'h':11,'i':12,'j':13,'k':14,'l':15,'m':16,'n':17,'o':18,'p':19,'q':20,'r':21,'s':22,'t':23,'u':24,'v':25,'w':26,'x':27,'y':28,'z':29,' ':30,'.':31,',':32,'\'':33,'/':34,'\"':35,':':36,';':37,'1':38,'2':39,'3':40,'4':41,'5':42,'6':43,'7':44,'8':45,'9':46,'0':47}
         ) -> npt.NDArray[np.uint8 | np.uint32 | np.uint16]:# if you go any higher fuck off
-    MAX : int = np.iinfo(dType).max
+
     msgarr: list[str]
     entry: npt.NDArray[np.uint8 | np.uint32 | np.uint16] 
 

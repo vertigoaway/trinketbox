@@ -5,6 +5,7 @@ import integerNNLoops as loops
 import integerTokenDataset as integerDataset
 import charTokenizer as cT
 import csv
+import numpy.typing as npt
 import numpy as np
 
 device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -107,7 +108,7 @@ def logitsToId(rawLogits,timeSteps,batchSize,vocLen):
     return chosenId
 
 
-def IdsToChrs(tokenIds,voc:dict[str,int]):
+def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:dict[str,int]):
     cov = {i: s for s, i in voc.items()}
     
     out : list[str] = []
@@ -119,6 +120,20 @@ def IdsToChrs(tokenIds,voc:dict[str,int]):
             except:
                 out[-1] += '�'
     return out
+
+def inferenceResponse(model,inp: str,
+                      voc:dict[str,int],
+                      eosTok:int=1
+                      ) -> str:
+    context : torch.types._TensorOrTensors = torch.tensor(cT.__tokenizeLine(inp,tokDict=voc))
+    a = 0
+    while a!=eosTok:
+        a = logitsToId(model(context.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
+        context = torch.cat([context[1:], a.squeeze().view(1)])
+        a = a.to('cpu').view(-1)[0].item()
+    out = cT.__detokenizeLine(context.cpu().numpy()[0])
+    return out
+
 
 model = NeuralNetwork(vocSize=vocSize, inSize=inSize, outSize=outSize, 
                       embedding_dim=embedding_dim, hidden_size=hidden_size, 
@@ -151,17 +166,25 @@ except KeyboardInterrupt:
 
 print('fun time')
 
-a = logitsToId(model(test_dataSet[1][0].unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
+
 charDict : dict[int,str]= {v: k for k, v in voc.items()}
 ine = test_dataSet[1][0]
 print(IdsToChrs([ine,],voc)[0],end='')
-try:
-    for i in range(0,4096):
-        a = logitsToId(model(ine.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
-        ine = torch.cat([ine[1:], a.squeeze().view(1)])
-        print(charDict[a.to('cpu').view(-1)[0].item()],end='')
-except KeyboardInterrupt:
-    print('interrupted')
+
+for i in range(0,4096):
+    
+    a = logitsToId(model(ine.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
+    ine = torch.cat([ine[1:], a.squeeze().view(1)])
+    print(charDict[a.to('cpu').view(-1)[0].item()],end='') # pyright: ignore[reportArgumentType]
+
+cont = True
+memory = np.zeros(shape=(4096))
+while cont:
+    tmp = input()
+    q = cT.__tokenizeLine(tmp,tokDict=voc)
+    memory = np.roll(memory,shift=len(q))
+    memory[4096-len(q):] = q
+    
 #print(IdsToChrs([test_dataSet[1][0],],voc)[0])
 #print(IdsToChrs(a,voc))
 #print(IdsToChrs([test_dataSet[1][1],],voc)[0])
