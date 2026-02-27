@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import numpy.typing as npt
 
-import ai.utils.charTokenizer as cT
+import charTokenizer as cT
 
 
 def logitsToId(rawLogits:torch.LongTensor | torch.Tensor,timeSteps : int ,batchSize: int ,vocLen: int) -> torch.Tensor: 
