@@ -1,8 +1,6 @@
 import torch
 from torch.utils.data import Dataset
-import numpy.typing as npt
-import numpy as np
-import math as m
+
 
 import torch.nn.functional as F
 class textDataset(Dataset):

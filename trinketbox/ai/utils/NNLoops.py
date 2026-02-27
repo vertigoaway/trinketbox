@@ -1,8 +1,5 @@
 import torch
 
-# nnloops adapted for integer token datasets
-
-
 class trainAndTest():
     def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer,)-> None:
         self.train_dataloader = train_dataloader
