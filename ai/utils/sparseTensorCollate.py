@@ -1,5 +1,7 @@
 import torch
 
+# yeah im lazy, notes below are gpt generated, majority of code written by me though :3c
+
 def sparse_collate_fn(batch):
     # 'batch' is a list of samples from the Dataset, where each sample 
     # might be a tuple of (sparse_features, label)

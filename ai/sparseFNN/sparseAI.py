@@ -1,11 +1,11 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-import sparseNNLoops as loops
-import sparseTokenDataset as sparseDataset
-import charTokenizer as cT
+import ai.utils.sparseNNLoops as loops
+import ai.utils.sparseTokenDataset as sparseDataset
+import ai.utils.charTokenizer as cT
 import csv
-from sparseTensorCollate import sparse_collate_fn as sparseCollate 
+from ai.utils.sparseTensorCollate import sparse_collate_fn as sparseCollate 
 learning_rate : float = 1e-3
 batch_size : int = 1
 epochs : int = 10

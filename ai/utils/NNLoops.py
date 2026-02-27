@@ -1,13 +1,10 @@
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
 
 # nnloops adapted for integer token datasets
 
-batch_size : int = 20
 
 class trainAndTest():
-    def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer)-> None:
+    def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer,)-> None:
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
         self.loss_fn = loss_fn
@@ -47,7 +44,6 @@ class trainAndTest():
         dataloader = self.test_dataloader
         model = self.model
         loss_fn = self.loss_fn 
-        optimizer = self.optimizer
         
         # Set the model to evaluation mode - important for batch normalization and dropout layers
         # Unnecessary in this situation but added for best practices
@@ -56,7 +52,6 @@ class trainAndTest():
         test_loss, correct = 0, 0
 
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode
-    # also serves to reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
         with torch.no_grad():
             for X, y in dataloader:
                 X, y = X.to(self.device), y.to(self.device)

@@ -7,14 +7,13 @@ import math as m
 import torch.nn.functional as F
 class textDataset(Dataset):
     def __init__(self, inSize:int, outSize:int, tokenizedData, vocSize:int):
-        ct : int = int(len(tokenizedData)/(inSize+outSize))-1
-        self.ct = ct
+        self.ct = len(tokenizedData) - (outSize+inSize+1)
         self.vocSize = vocSize
         tokenizedData = torch.LongTensor(tokenizedData)
         inp = []
         out = []
 
-        for x in range(ct):
+        for x in range(self.ct):
             inp.append(F.one_hot(tokenizedData[inSize*x:inSize*(x+1)],self.vocSize).to_sparse())
             out.append(F.one_hot(tokenizedData[inSize*(x+1):(inSize*(x+1))+outSize],self.vocSize).to_sparse())
         self.inp = inp
