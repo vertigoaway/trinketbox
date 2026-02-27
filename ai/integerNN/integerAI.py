@@ -20,6 +20,8 @@ voc : dict[str,int]= {'�':0,chr(10):1,'-':2,'_':3,'a':4,'b':5,'c':6,'d':7,'e':
        '\"':35,':':36,';':37,'1':38,'2':39,'3':40,
        '4':41,'5':42,'6':43,'7':44,'8':45,'9':46,
        '0':47,}
+cov = {i: s for s, i in voc.items()}
+
 #'😭':48,'😡':49,'😃':50}
 vocSize : int = len(voc) #acct for special toks
 
@@ -54,10 +56,10 @@ goongagas = None
 x = cT.dynamicTokenize(readout,tokDict=voc)
 
 train_dataSet = integerDataset.textDataset(inSize=inSize,outSize=outSize,
-                                 tokenizedData=x[0:len(x)//10*8],
+                                 tokenizedData=x[0:len(x)//2],
                                  vocSize=vocSize)
 test_dataSet = integerDataset.textDataset(inSize=inSize,outSize=outSize,
-                                tokenizedData=x[len(x)//10*8:],
+                                tokenizedData=x[len(x)//2:],
                                 vocSize=vocSize)
 train_dataloader = DataLoader(train_dataSet, batch_size=batch_size, 
                               shuffle=True,)
@@ -125,12 +127,13 @@ def inferenceResponse(model,inp: str,
                       voc:dict[str,int],
                       eosTok:int=1
                       ) -> str:
-    context : torch.types._TensorOrTensors = torch.tensor(cT.__tokenizeLine(inp,tokDict=voc))
+    context : torch.types._TensorOrTensors = torch.LongTensor(cT.__tokenizeLine(inp,tokDict=voc))
     a = 0
     while a!=eosTok:
         a = logitsToId(model(context.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
-        context = torch.cat([context[1:], a.squeeze().view(1)])
+        context = torch.cat([context[outSize:], a.squeeze().view(1)])
         a = a.to('cpu').view(-1)[0].item()
+        print(cov[a],end='',flush=True) # pyright: ignore[reportArgumentType]
     out = cT.__detokenizeLine(context.cpu().numpy()[0])
     return out
 
@@ -163,27 +166,33 @@ try:
         torch.save(model.state_dict(),'model.pth')
 except KeyboardInterrupt:
     print('interrupted')
+    print('saving')
+    torch.save(model.state_dict(),'model.pth')
 
 print('fun time')
 
 
-charDict : dict[int,str]= {v: k for k, v in voc.items()}
 ine = test_dataSet[1][0]
-print(IdsToChrs([ine,],voc)[0],end='')
-
-for i in range(0,4096):
-    
-    a = logitsToId(model(ine.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
-    ine = torch.cat([ine[1:], a.squeeze().view(1)])
-    print(charDict[a.to('cpu').view(-1)[0].item()],end='') # pyright: ignore[reportArgumentType]
+memory = IdsToChrs([ine,],voc)[0]
 
 cont = True
-memory = np.zeros(shape=(4096))
 while cont:
-    tmp = input()
-    q = cT.__tokenizeLine(tmp,tokDict=voc)
-    memory = np.roll(memory,shift=len(q))
-    memory[4096-len(q):] = q
+    tmp = input('>>')
+    if tmp == 'EXIT':
+        cont = False
+        continue
+    tmp = tmp.lower()
+    memory = memory[len(tmp):] + tmp
+    memory = inferenceResponse(model,memory,voc)
+
+#for i in range(0,4096):
+    
+#    a = logitsToId(model(ine.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1,vocLen=vocSize)
+#    ine = torch.cat([ine[1:], a.squeeze().view(1)])
+#    print(charDict[a.to('cpu').view(-1)[0].item()],end='') # pyright: ignore[reportArgumentType]
+
+
+
     
 #print(IdsToChrs([test_dataSet[1][0],],voc)[0])
 #print(IdsToChrs(a,voc))
