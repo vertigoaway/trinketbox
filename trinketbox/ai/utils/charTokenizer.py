@@ -32,7 +32,7 @@ def tokenizeLine( #tokenizes a single line of any size
     for id,letter in enumerate(msgarr):
         try:
             entry[id] = tokDict[letter]
-        except IndexError:
+        except KeyError:
             entry[id] = nulTok
     entry[-1] = eosTok
     return entry
