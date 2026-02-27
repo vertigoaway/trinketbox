@@ -26,15 +26,15 @@ cov = {i: s for s, i in voc.items()}
 vocSize : int = len(voc) #acct for special toks
 
 ### LSTM Architecture Parameters
-inSize : int = 4096
+inSize : int = 512
 outSize : int = 1
-embedding_dim : int = 256  # Embedding dimension for vocabulary
-hidden_size : int = 1024    # Hidden size for each LSTM layer
+embedding_dim : int = 384  # Embedding dimension for vocabulary
+hidden_size : int = 768    # Hidden size for each LSTM layer
 num_layers : int = 2       # Number of LSTM layers
 dropout : float = 0.2      # Dropout for regularization between LSTM layers
 ### Training params
 loss_fn = nn.CrossEntropyLoss()
-learning_rate : float = 1e-3
+learning_rate : float = 5e-4
 batch_size : int = 20
 epochs : int = 10
 
@@ -81,7 +81,7 @@ class NeuralNetwork(nn.Module):
                            num_layers=num_layers, 
                            batch_first=True,
                            dropout=dropout if num_layers > 1 else 0)
-        self.relu = nn.ReLU()
+        self.layerNorm = nn.LayerNorm(hidden_size)
         self.linear = nn.Linear(hidden_size, outSize * vocSize)
         self.outSize = outSize
         self.vocSize = vocSize
@@ -92,8 +92,8 @@ class NeuralNetwork(nn.Module):
         lstm_out, (hidden, cell) = self.lstm(x)  # (batch_size, inSize, hidden_size)
         # Use the last timestep output
         x = lstm_out[:, -1, :]  # (batch_size, hidden_size)
+        x = self.layerNorm(x)
         logits = self.linear(x)  # (batch_size, outSize * vocSize)
-        logits = self.relu(logits)  # Apply ReLU activationw
         logits = logits.view(-1, self.outSize, self.vocSize)  # (batch_size, outSize, vocSize)
         return logits
 
@@ -152,7 +152,6 @@ print(model)
 
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-model.compile()
 
 loopdeloop = loops.trainAndTest(train_dataloader,
                                 test_dataloader,
