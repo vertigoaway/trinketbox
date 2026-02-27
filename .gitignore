@@ -209,5 +209,5 @@ __marimo__/
 
 data/
 dataset/
-
+*.csv
 model.pth
