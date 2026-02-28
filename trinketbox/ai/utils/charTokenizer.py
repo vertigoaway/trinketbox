@@ -23,11 +23,10 @@ def tokenizeLine( #tokenizes a single line of any size
     Returns:
         An array of token indices.
     """
-    msgarr: list[str]
+    msgarr: list[str] = list(msg)
     entry: npt.NDArray[np.uint8 | np.uint32 | np.uint16] 
 
     entry = np.zeros(len(msg)+1,dtype=dType)
-    msgarr = list(msg)
 
     for id,letter in enumerate(msgarr):
         try:

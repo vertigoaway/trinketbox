@@ -86,7 +86,7 @@ loopdeloop = loops.trainAndTest(train_dataloader,
                                 loss_fn,
                                 optimizer)
 
-
+print(f"Approx training steps per epoch:{len(train_dataSet)//batch_size}")
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     loopdeloop.train_loop()
