@@ -24,6 +24,22 @@ class testTokenizer(unittest.TestCase):
         #not implemented
         return
 
+    def testCharVocabClassDictionarySync(self):
+
+        return
+    def testCharVocabClassTokenizationDetokenization(self):
+        voc = cT.charVocab()
+
+        voc.addCharacters(list('abcdefghijklmnopqrstuvwxyz '))
+
+        x = voc.tokenizeLine('apple ')
+        y = voc.detokenizeLine(x)
+        self.assertEqual(x,[28, 13, 13, 17, 24, 2, 1])
+        self.assertEqual(y,'apple \n')
+        return
+    def testCharVocabClassCharacterDuplication(self):
+
+        return
 if __name__ == '__main__':
     voc = {'�':0,chr(10):1,'-':2,'_':3,
                             'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
