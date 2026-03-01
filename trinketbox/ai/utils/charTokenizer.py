@@ -72,7 +72,7 @@ class charVocab():
         x = len(self.tokenDict)
         out = []
         while len(out)<ct:
-            if type(self.tokenDict.get(x)) == None:
+            if self.tokenDict.get(x) == None:
                 out.append(x)
             x+=1
         return out
@@ -86,7 +86,7 @@ class charVocab():
         out : list[int]= []
         for c in chrs:
             out.append(self.vocabDict.get(c)) # pyright: ignore[reportArgumentType]
-            out[-1] = self.eomTok[0]
+        out.append(self.eomTok[0])
         return out
     def tokenizeLines(self,lines:list[str]) -> list[list[int]]:
         out : list[list[int]]  = []
@@ -96,8 +96,7 @@ class charVocab():
     def detokenizeLine(self,toks:list[int]) -> str:
         out : str = ''
         for tok in toks:
-        
-            out.join(self.tokenDict.get(tok)) # pyright: ignore[reportCallIssue,reportArgumentType]
+            out+=self.tokenDict.get(tok,self.nulTok[1])
         return out
     def detokenizeLines(self,toksList:list[list[int]]) -> list[str]:
         out : list[str] = []
