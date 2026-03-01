@@ -6,13 +6,11 @@ from typing import Any
     # 1. add multithreading (OPTIONAL)
 
 
-
 class charVocab():
     vocabDict : dict[str,int]
     tokenDict : dict[int,str]
     nulTok : tuple[int,str]
     eomTok : tuple[int,str]
-    maxVocSize : int
     def __init__(self,nulTok=(0,'�'),eomTok=(1,'\n')) -> None:
         self.nulTok = nulTok
         self.eomTok = eomTok
@@ -70,7 +68,43 @@ class charVocab():
         else:
             raise TypeError
         return
-    
+    def getFreeIndices(self, ct:int) -> list[int]:
+        x = len(self.tokenDict)
+        out = []
+        while len(out)<ct:
+            if type(self.tokenDict.get(x)) == None:
+                out.append(x)
+            x+=1
+        return out
+
+    def addCharacters(self, chrs : list[str]) -> None:
+        indices : list[int] = self.getFreeIndices(len(chrs))
+        for i in indices:
+            self[i] = chrs.pop(-1)
+        return
+    def tokenizeLine(self,chrs:str)-> list[int]: 
+        out : list[int]= []
+        for c in chrs:
+            out.append(self.vocabDict.get(c)) # pyright: ignore[reportArgumentType]
+            out[-1] = self.eomTok[0]
+        return out
+    def tokenizeLines(self,lines:list[str]) -> list[list[int]]:
+        out : list[list[int]]  = []
+        for line in lines:
+            out.append(self.tokenizeLine(line))
+        return out
+    def detokenizeLine(self,toks:list[int]) -> str:
+        out : str = ''
+        for tok in toks:
+        
+            out.join(self.tokenDict.get(tok)) # pyright: ignore[reportCallIssue,reportArgumentType]
+        return out
+    def detokenizeLines(self,toksList:list[list[int]]) -> list[str]:
+        out : list[str] = []
+        for toks in toksList:
+            out.append(self.detokenizeLine(toks))
+        return out
+
 def tokenizeLine( #tokenizes a single line of any size
         msg: str,
         nulTok: int = 0,
