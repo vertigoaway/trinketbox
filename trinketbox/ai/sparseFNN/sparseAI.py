@@ -3,7 +3,8 @@ from torch import nn
 from torch.utils.data import DataLoader
 import trinketbox.ai.utils.sparseNNLoops as loops
 import trinketbox.ai.utils.sparseTokenDataset as sparseDataset
-import trinketbox.ai.utils.charTokenizer as cT
+from griot import char
+from griot import tool
 import csv
 from trinketbox.ai.utils.sparseTensorCollate import sparse_collate_fn as sparseCollate 
 
@@ -18,15 +19,10 @@ trainingData = 'data.csv'
 
 #0 is null
 #1 is end of sent
-voc : dict[str,int]= {'�':0,chr(10):1,'-':2,'_':3,
-       'a':4,'b':5,'c':6,'d':7,'e':8,'f':9,'g':10,
-       'h':11,'i':12,'j':13,'k':14,'l':15,'m':16,
-       'n':17,'o':18,'p':19,'q':20,'r':21,'s':22,
-       't':23,'u':24,'v':25,'w':26,'x':27,'y':28,
-       'z':29,' ':30,'.':31,',':32,'\'':33,'/':34,
-       '\"':35,':':36,';':37,'1':38,'2':39,'3':40,
-       '4':41,'5':42,'6':43,'7':44,'8':45,'9':46,
-       '0':47,}
+
+voc : char.Vocab = char.Vocab()
+voc.addCharacters(list('abcdefghijklmnopqrstuvwxyz \\;:.,[]()'))
+
 vocSize : int = len(voc)
 
 
@@ -42,8 +38,8 @@ with open(trainingData, "r") as csvfile:
 readout = out
 
 ###create dataloaders
-x = cT.dynamicTokenize(readout,tokDict=voc)
 
+x = tool.flattenTokenizedLines(voc.tokenizeLines(readout))
 train_dataSet = sparseDataset.textDataset(inSize=inSize,outSize=outSize,
                                  tokenizedData=x[0:len(x)//2],
                                  vocSize=vocSize)

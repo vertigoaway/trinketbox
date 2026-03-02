@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name="trinketbox",
-    version="0.1.3",
+    version="1.0.0",
     author="verti",
     author_email="verti@piss.industries",
     description='verti\'s assortment of libraries',
@@ -11,7 +11,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         "numpy==2.2.6",
-        "setuptools==82.0.0",
-        "torch==2.10.0"
+        "setuptools==59.6.0",
+        "torch==2.10.0",
+        "griot>=0.0.1"
     ],
 )

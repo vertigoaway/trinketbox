@@ -2,9 +2,8 @@ import torch
 import numpy as np
 import numpy.typing as npt
 
-import trinketbox.ai.utils.charTokenizer as cT
-
-
+from griot import char
+from griot import word
 def logitsToId(rawLogits:torch.LongTensor | torch.Tensor,
                timeSteps : int,
                batchSize: int) -> torch.Tensor: 
@@ -28,13 +27,13 @@ def logitsToId(rawLogits:torch.LongTensor | torch.Tensor,
     return chosenId
 
 
-def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:dict[str,int]) -> list[str]:
+def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:char.Vocab | word.Vocab) -> list[str]:
     """Converts token indices to characters. 
     Args: 
         voc: Dict mapping chars to indices.
         tokenIds: Shape (batchSize, timeSteps).
     """
-    cov = {i: s for s, i in voc.items()}
+    cov = voc.tokenDict
     #in shape (batchSize, timeSteps)
     out : list[str] = []
     for b in tokenIds: # batch
@@ -47,7 +46,7 @@ def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:dict
     return out
 
 def inferenceResponse(model,inp: str,
-                      voc:dict[str,int],
+                      voc: char.Vocab | word.Vocab ,
                       eosTok:int=1,outSize:int=1,device:str='cpu'
                       ) -> str:
     """Generates a response from the given context.
@@ -58,20 +57,19 @@ def inferenceResponse(model,inp: str,
         eosTok: Token that indicates end of response
     Returns:
         String containing detokenized response"""
-    cov = {i: s for s, i in voc.items()}
 
-    context : torch.types._TensorOrTensors = torch.LongTensor(cT.tokenizeLine(inp,tokDict=voc))
+    context : torch.types._TensorOrTensors = torch.LongTensor(voc.tokenizeLine(inp)) # pyright: ignore[reportAttributeAccessIssue]
     a = 0
     out = ''
     while a!=eosTok:
         a = logitsToId(model(context.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1)
         context = torch.cat([context[outSize:], a.squeeze().view(1)])
         a = a.to('cpu').view(-1)[0].item()
-        out += cov[a] # pyright: ignore[reportArgumentType]
+        out += voc.tokenDict[a] # pyright: ignore[reportArgumentType]
     return out
 
 
-def basicInterface(model, voc, memory:str='', timeSteps:int=512,filler:str='�') -> None:
+def basicInterface(model, voc: char.Vocab | word.Vocab, memory:str='', timeSteps:int=512,filler:str='�') -> None:
     if len(memory)<timeSteps:
         memory+=filler*(len(memory)-timeSteps)
     print(memory)
