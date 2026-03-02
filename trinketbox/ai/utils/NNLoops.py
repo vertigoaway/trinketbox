@@ -19,10 +19,10 @@ class trainAndTest():
         # Unnecessary in this situation but added for best practices
         model.train()
         for batch, (X, y) in enumerate(dataloader):
+            X, y = X.to(self.device), y.to(self.device)
             #X is the input 
             #y is the intended output
             pred = model(X)  # (B, V)
-            X, y = X.to(self.device), y.to(self.device)
             optimizer.zero_grad()
             pred = model(X)  # (B, V)
             loss = loss_fn(pred, y)  # y shape: (B,)
