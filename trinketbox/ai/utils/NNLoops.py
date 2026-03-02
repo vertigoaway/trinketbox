@@ -14,24 +14,21 @@ class trainAndTest():
         model = self.model
         loss_fn = self.loss_fn 
         optimizer = self.optimizer
-        
+
         # Set the model to training mode - important for batch normalization and dropout layers
         # Unnecessary in this situation but added for best practices
         model.train()
         for batch, (X, y) in enumerate(dataloader):
             #X is the input 
             #y is the intended output
+            pred = model(X)  # (B, V)
             X, y = X.to(self.device), y.to(self.device)
-
-            pred = model(X)  
-            # Reshape pred from (batch_size, outSize, vocSize) to (batch_size*outSize, vocSize)
-            # Reshape y from (batch_size, outSize) to (batch_size*outSize)
-            pred_flat = pred.view(-1, pred.shape[-1])
-            y_flat = y.view(-1)
-            loss = loss_fn(pred_flat, y_flat)
-
             optimizer.zero_grad()
+            pred = model(X)  # (B, V)
+            loss = loss_fn(pred, y)  # y shape: (B,)
+
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
 
             if batch % 100 == 0:
