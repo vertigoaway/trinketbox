@@ -33,16 +33,11 @@ def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:char
         voc: Dict mapping chars to indices.
         tokenIds: Shape (batchSize, timeSteps).
     """
-    cov = voc.tokenDict
     #in shape (batchSize, timeSteps)
     out : list[str] = []
     for b in tokenIds: # batch
-        out.append('')
-        for i in b: # time step
-            try:
-                out[-1] += cov[int(i)]
-            except KeyError:
-                out[-1] += '�'
+        out.append(voc.detokenizeLine(b)) # pyright: ignore[reportAttributeAccessIssue]
+
     return out
 
 def inferenceResponse(model,inp: str,
