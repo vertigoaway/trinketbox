@@ -33,10 +33,10 @@ class textDataset(Dataset):
 class lazyTextDataset(Dataset):
     def __init__(self, inSize:int, outSize:int, tokenizedData, vocSize:int)->None:
         # tokenizedData is expected to be a flat list/array of integer tokens
-        device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device : torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.ct = len(tokenizedData) - (outSize+inSize+1)
         self.vocSize = vocSize
-        self.tokenizedData = torch.LongTensor(tokenizedData).to(device) #optimization can be made here
+        self.tokenizedData = torch.LongTensor(tokenizedData) #optimization can be made here
         self.inSize = inSize
         self.outSize = outSize
         
@@ -46,7 +46,7 @@ class lazyTextDataset(Dataset):
     def __getitem__(self, idx : int):#shifting window
         # return token id sequences
         endPos : int = idx+self.inSize
-        inp = self.tokenizedData[idx : endPos]
-        out = self.tokenizedData[endPos : endPos + self.outSize]
+        inp = self.tokenizedData[idx : endPos].to(self.device)
+        out = self.tokenizedData[endPos : endPos + self.outSize].to(self.device)
 
         return inp, out
