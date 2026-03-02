@@ -22,9 +22,9 @@ class trainAndTest():
             X, y = X.to(self.device), y.to(self.device)
             #X is the input 
             #y is the intended output
-            pred = model(X)  # (B, V)
             optimizer.zero_grad()
             pred = model(X)  # (B, V)
+            y = y.squeeze(1)
             loss = loss_fn(pred, y)  # y shape: (B,)
 
             loss.backward()
