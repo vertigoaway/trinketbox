@@ -16,8 +16,8 @@ class textDataset(Dataset):
         self.outSize = outSize
         for idx in range(self.ct):
             endPos : int = idx+self.inSize
-            self.inp.append(torch.LongTensor(tokenizedData[idx : endPos],device=device))
-            self.out.append(torch.LongTensor(tokenizedData[endPos:endPos+self.outSize],device=device))
+            self.inp.append(torch.LongTensor(tokenizedData[idx : endPos]))
+            self.out.append(torch.LongTensor(tokenizedData[endPos:endPos+self.outSize]))
 
 
         
@@ -46,7 +46,7 @@ class lazyTextDataset(Dataset):
     def __getitem__(self, idx : int):#shifting window
         # return token id sequences
         endPos : int = idx+self.inSize
-        inp = self.tokenizedData[idx : endPos].to(self.device)
-        out = self.tokenizedData[endPos : endPos + self.outSize].to(self.device)
+        inp = self.tokenizedData[idx : endPos]
+        out = self.tokenizedData[endPos : endPos + self.outSize]
 
         return inp, out
