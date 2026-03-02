@@ -11,7 +11,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "numpy==2.2.6",
-        "setuptools==59.6.0",
+        "setuptools==82.0.0",
         "torch==2.10.0"
     ],
 )
