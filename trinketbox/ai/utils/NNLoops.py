@@ -43,7 +43,7 @@ class trainAndTest():
         # Set the model to evaluation mode - important for batch normalization and dropout layers
         model.eval()
         num_batches = len(dataloader)
-        test_loss, correct = 0, 0
+        test_loss, correct = 0.0, 0
 
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode
         with torch.no_grad():

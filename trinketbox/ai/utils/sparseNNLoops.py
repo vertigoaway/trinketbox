@@ -53,7 +53,7 @@ class trainAndTest():
         # Unnecessary in this situation but added for best practices
         model.eval()
         num_batches = len(dataloader)
-        test_loss, correct = 0, 0
+        test_loss, correct = 0.0, 0
 
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode
     # also serves to reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True
