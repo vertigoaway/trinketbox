@@ -14,25 +14,26 @@ class trainAndTest():
         model = self.model
         loss_fn = self.loss_fn 
         optimizer = self.optimizer
-
+        
         # Set the model to training mode - important for batch normalization and dropout layers
         # Unnecessary in this situation but added for best practices
         model.train()
         for batch, (X, y) in enumerate(dataloader):
-            X, y = X.to(self.device), y.to(self.device)
             #X is the input 
             #y is the intended output
-            optimizer.zero_grad()
-            pred = model(X)  # (B, V)
-            y = y.squeeze(1)
-            loss = loss_fn(pred, y)  # y shape: (B,)
+            X, y_flat = X.to(self.device), y.to(self.device).view(-1)
+            # Reshape y from (batch_size, outSize) to (batch_size*outSize)
+            pred = model(X)  
+            pred = pred.view(-1, pred.shape[-1])            # Reshape pred from (batch_size, outSize, vocSize) to (batch_size*outSize, vocSize)
+            
+            loss = loss_fn(pred, y_flat)
 
+            optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
 
             if batch % 100 == 0:
-                print(f"loss: {loss.item():>7f}")
+                print(f"step {batch} loss: {loss.item():>7f}")
 
     def test_loop(self) -> None:
         dataloader = self.test_dataloader
@@ -40,7 +41,6 @@ class trainAndTest():
         loss_fn = self.loss_fn 
         
         # Set the model to evaluation mode - important for batch normalization and dropout layers
-        # Unnecessary in this situation but added for best practices
         model.eval()
         num_batches = len(dataloader)
         test_loss, correct = 0, 0
@@ -48,16 +48,12 @@ class trainAndTest():
     # Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode
         with torch.no_grad():
             for X, y in dataloader:
-                X, y = X.to(self.device), y.to(self.device)
+                X, y = X.to(self.device), y.to(self.device).view(-1)
                 pred = model(X)
+                pred = pred.view(-1, pred.shape[-1])
                 # Reshape for loss calculation
-                pred_flat = pred.view(-1, pred.shape[-1])
-                y_flat = y.view(-1)
-                test_loss += loss_fn(pred_flat, y_flat).item()
-                correct += (pred_flat.argmax(1) == y_flat).type(torch.float).sum().item()
+                test_loss += loss_fn(pred, y).item()
+                correct += (pred.argmax(1) == y).type(torch.float).sum().item()
 
         test_loss /= num_batches if num_batches>0 else 1
         print(f"Avg loss: {test_loss:>8f}\n")
-
-
-
