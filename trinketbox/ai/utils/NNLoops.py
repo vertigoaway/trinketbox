@@ -1,4 +1,5 @@
 import torch
+from torch.nn.functional import one_hot
 
 class trainAndTest():
     def __init__(self,train_dataloader,test_dataloader,model,loss_fn,optimizer,)-> None:
@@ -16,24 +17,23 @@ class trainAndTest():
         optimizer = self.optimizer
         
         # Set the model to training mode - important for batch normalization and dropout layers
-        # Unnecessary in this situation but added for best practices
         model.train()
+        stepCt = len(dataloader)
         for batch, (X, y) in enumerate(dataloader):
             #X is the input 
             #y is the intended output
             X, y_flat = X.to(self.device), y.to(self.device).view(-1)
-            # Reshape y from (batch_size, outSize) to (batch_size*outSize)
+            # Reshape y from (batch_size, outSize, vocSize) to (batch_size*outSize)
             pred = model(X)  
             pred = pred.view(-1, pred.shape[-1])            # Reshape pred from (batch_size, outSize, vocSize) to (batch_size*outSize, vocSize)
-            
-            loss = loss_fn(pred, y_flat)
 
+            loss = loss_fn(pred, y_flat)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             if batch % 100 == 0:
-                print(f"step {batch} loss: {loss.item():>7f}")
+                print(f"step {batch}/{stepCt} loss: {loss.item():>7f}")
 
     def test_loop(self) -> None:
         dataloader = self.test_dataloader
