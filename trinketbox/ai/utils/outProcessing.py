@@ -46,7 +46,7 @@ def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:char
 def inferenceResponse(model,inp: str,
                       voc: char.Vocab | word.Vocab ,
                       eosTok:int=1,outSize:int=1,device:str='cpu'
-                      ) -> str:
+                      ) -> (str, list):
     """Generates a response from the given context.
     Args:
         model: The model to use.
@@ -55,19 +55,20 @@ def inferenceResponse(model,inp: str,
         eosTok: Token that indicates end of response
     Returns:
         String containing detokenized response"""
-
     context : torch.types._TensorOrTensors = torch.LongTensor(voc.tokenizeLine(inp)+[voc.eomTok[0]]) # pyright: ignore[reportAttributeAccessIssue]
     a = 0
-    out = ''
+    outStr = ''
+    outArr = []
     while a!=eosTok:
         a = logitsToId(model(context.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1)
         context = torch.cat([context[outSize:], a.squeeze().view(1)])
         a = a.to('cpu').view(-1)[0].item()
-        out += voc.tokenDict[a] # pyright: ignore[reportArgumentType]
-    return out
+        outStr += voc[a] # pyright: ignore[reportArgumentType]
+        outArr.append(a)
+    return outStr,outArr
 
 
-def basicInterface(model, voc: char.Vocab | word.Vocab, memory:list[str]=[], timeSteps:int=512,filler:str='�') -> None:
+def basicInterface(model, voc: char.Vocab | word.Vocab, memory:list[str]=[], timeSteps:int=512,filler:str='�',word:bool=True) -> None:
     if len(memory)<timeSteps:
         memory += [filler]*(timeSteps-len(memory))
     print(memory)
@@ -78,7 +79,9 @@ def basicInterface(model, voc: char.Vocab | word.Vocab, memory:list[str]=[], tim
             cont = False
             continue
         memory = memory[len(tmp):] + list(tmp)
-        response = inferenceResponse(model,str(memory),voc)
-        memory = memory[len(response):] + list(response)
+
+        response = voc.detokenizeLine(inferenceResponse(model,str(memory),voc)[-1])
         print(response)
+
+        memory = memory[len(response):] + list(response) 
     return None
