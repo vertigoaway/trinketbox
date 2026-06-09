@@ -4,6 +4,8 @@ import numpy.typing as npt
 
 from griot import char
 from griot import word
+from griot import numpyWord
+from typing import cast
 def logitsToId(rawLogits:torch.LongTensor | torch.Tensor,
                timeSteps : int,
                batchSize: int, 
@@ -19,18 +21,22 @@ def logitsToId(rawLogits:torch.LongTensor | torch.Tensor,
     for batch in range(batchSize):
         for stamp in range(timeSteps):
             idVals,tokenIds = torch.topk(rawLogits[batch][stamp],k=k,dim=-1)
-            idVals = idVals.cpu().detach().numpy()
-            tokenIds = tokenIds.cpu().detach().numpy()
+            
+            npIdVals  : np.ndarray = idVals.cpu().detach().numpy()
+            npTokenIds : np.ndarray = tokenIds.cpu().detach().numpy()
+            del idVals
+            del tokenIds
             try:
-                chosenId[batch][stamp] = np.random.choice(tokenIds, size=1, p=idVals/idVals.sum())
+                chosenId[batch][stamp] = np.random.choice(npTokenIds, size=1, p=npIdVals/npIdVals.sum())
             except ValueError: # can fail if negative prob is given
-                chosenId[batch][stamp] = tokenIds[0] # take most likely one
-    chosenId = torch.tensor(chosenId, dtype=torch.long)
+                chosenId[batch][stamp] = npTokenIds[0] # take most likely one
+    chosenIdTensored : torch.Tensor = torch.tensor(chosenId, dtype=torch.long)
+    del chosenId
     #chosenId shape: (batchSize, timeSteps)
-    return chosenId
+    return chosenIdTensored
 
 
-def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:char.Vocab | word.Vocab) -> list[str]:
+def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:char.Vocab | word.Vocab | numpyWord.StrictVocab) -> list[str]:
     """Converts token indices to characters. 
     Args: 
         voc: Dict mapping chars to indices.
@@ -44,9 +50,9 @@ def IdsToChrs(tokenIds : npt.NDArray[np.uint8 | np.uint32 | np.uint16] ,voc:char
     return out
 
 def inferenceResponse(model,inp: str,
-                      voc: char.Vocab | word.Vocab ,
+                      voc: char.Vocab | word.Vocab | numpyWord.StrictVocab ,
                       eosTok:int=1,outSize:int=1,device:str='cpu'
-                      ) -> (str, list):
+                      ) -> tuple[str,list]:
     """Generates a response from the given context.
     Args:
         model: The model to use.
@@ -56,32 +62,32 @@ def inferenceResponse(model,inp: str,
     Returns:
         String containing detokenized response"""
     context : torch.types._TensorOrTensors = torch.LongTensor(voc.tokenizeLine(inp)+[voc.eomTok[0]]) # pyright: ignore[reportAttributeAccessIssue]
-    a = 0
-    outStr = ''
-    outArr = []
-    while a!=eosTok:
-        a = logitsToId(model(context.unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1)
-        context = torch.cat([context[outSize:], a.squeeze().view(1)])
-        a = a.to('cpu').view(-1)[0].item()
-        outStr += voc[a] # pyright: ignore[reportArgumentType]
-        outArr.append(a)
-    return outStr,outArr
+    a : torch.Tensor
+    b : int = -100
+    outStr : str = ''
+    outArr : list[int]= []
+    while b!=eosTok: #a ton of casting happens due to torch using wide types. no perf impact
+        a = logitsToId(model(cast(torch.Tensor,context).unsqueeze(0).to(device)),timeSteps=outSize,batchSize=1)
+        context = torch.cat([cast(torch.Tensor,context[outSize:]), a.squeeze().view(1)])
+        b = cast(int,a.to('cpu').view(-1)[0].item())
+        outStr += cast(str,voc[b]) # pyright: ignore[reportArgumentType]
+        outArr.append(b)
+    return (outStr,outArr)
 
 
-def basicInterface(model, voc: char.Vocab | word.Vocab, memory:list[str]=[], timeSteps:int=512,filler:str='�',word:bool=True) -> None:
+def basicInterface(model, voc: char.Vocab | word.StrictVocab | numpyWord.StrictVocab, memory:list[str]=[], timeSteps:int=512,filler:str='�',word:bool=True) -> None:
     if len(memory)<timeSteps:
         memory += [filler]*(timeSteps-len(memory))
     print(memory)
-    cont = True
+    cont : bool = True
     while cont:
-        tmp = input('>>').strip().lower()
+        tmp : str = input('>>').strip().lower()
         if tmp == 'exit':
             cont = False
             continue
         memory = memory[len(tmp):] + list(tmp)
-
-        response = voc.detokenizeLine(inferenceResponse(model,str(memory),voc)[-1])
+        response : str = cast(str,voc.detokenizeLine(inferenceResponse(model,str(memory),voc)[-1]))
         print(response)
 
         memory = memory[len(response):] + list(response) 
-    return None
+    return
